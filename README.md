@@ -1,55 +1,72 @@
-# ClaimsAI - Auditor de Seguros Multimodal
+# ClaimsAI
 
-> **Plataforma de análise automática de sinistros utilizando Agentes Autônomos, Visão Computacional e RAG Híbrido.**
+## Auditoria de Sinistros com IA Multimodal e Arquitetura Híbrida AWS
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green.svg)
-![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-orange.svg)
-![Qdrant](https://img.shields.io/badge/VectorDB-Qdrant-red.svg)
-![OpenAI](https://img.shields.io/badge/Model-GPT--4o-purple.svg)
-
-## 📋 Sobre o Projeto
-
-O **ClaimsAI** é uma solução *Enterprise-Grade* projetada para automatizar o processo de triagem de sinistros de seguros automotivos. Diferente de chatbots tradicionais, o sistema atua como um **Agente Autônomo** que:
-
-1.  **Vê:** Analisa fotos do acidente para identificar danos visuais (ex: "para-choque quebrado") usando GPT-4o Vision.
-2.  **Lê:** Consulta apólices complexas (PDFs) para entender coberturas e franquias.
-3.  **Decide:** Cruza a evidência visual com a regra contratual para sugerir aprovação ou recusa.
-
-O projeto foca em resolver problemas reais de **Alucinação** e **Falta de Contexto** usando técnicas avançadas de Engenharia de IA.
+O ClaimsAI é uma plataforma de engenharia de dados e inteligência artificial projetada para automatizar a triagem de sinistros automotivos. O sistema atua como um assistente auditor que correlaciona evidências visuais (fotos do acidente) com regras contratuais (apólices em PDF), utilizando infraestrutura de nuvem otimizada para baixo custo e alta performance.
 
 ---
 
-| Componente | Tecnologia | Função no Projeto |
-| :--- | :--- | :--- |
-| **LLM & Vision** | **OpenAI GPT-4o** | Modelo multimodal SOTA (State of the Art) para raciocínio e visão. |
-| **Orquestração** | **LangGraph** | Gerenciamento de estado e fluxo cíclico (Loops) dos agentes. |
-| **Vector DB** | **Qdrant** | Armazenamento vetorial com suporte nativo a busca híbrida. |
-| **Backend** | **FastAPI** | API assíncrona de alta performance. |
-| **Interface** | **Chainlit** | UI pronta para chats e visualização de passos (Tracing). |
-| **Re-ranking** | **Cohere** | Modelo especializado em reordenar resultados para precisão máxima. |
-| **Observabilidade** | **Arize Phoenix** | Tracing e debug das chamadas do LLM (opcional). |
+## Stack Tecnológica
 
-##  Técnicas Avançadas Aplicadas
+* **Linguagem:** Python 3.10+
+* **Backend:** FastAPI
+* **Frontend:** Streamlit
+* **LLM & Inferência:** Llama 3 (via Groq API)
+* **Banco Vetorial:** Qdrant Cloud
+* **Infraestrutura:** AWS (EC2, S3, ElastiCache)
+* **Containerização:** Docker & Docker Compose
 
-Este projeto vai além do básico, implementando as melhores práticas de Engenharia de RAG:
+---
 
-### 1. Multimodal RAG
-Não processamos apenas texto. O sistema ingere imagens, gera descrições semânticas e as utiliza para consultar a base de conhecimento textual.
-* *Exemplo:* A visão detecta "enchente". O RAG busca automaticamente cláusulas sobre "desastres naturais".
+## Funcionalidades Principais
 
-### 2. Hybrid Search (Busca Híbrida)
-Resolve o problema de encontrar termos exatos (como códigos de apólice "CLA-204") que a busca vetorial pura às vezes perde.
-* **Dense Vector:** Busca pelo sentido (Embeddings).
-* **Sparse Vector (BM25):** Busca por palavras-chave exatas.
-* **Reciprocal Rank Fusion (RRF):** Algoritmo que funde os dois resultados.
+O sistema resolve o problema de falta de contexto em auditorias manuais através de três pilares:
 
-### 3. Re-ranking (Reclassificação)
-Após recuperar ~25 documentos do banco, usamos um **Cross-Encoder** (Cohere) para ler detalhadamente cada um e ordenar os Top 5 mais relevantes. Isso aumenta drasticamente a precisão da resposta final.
+* **Análise Visual:** Processamento de imagens para identificação automática de danos e extensão do sinistro.
+* **Verificação Contratual:** Busca semântica em apólices para validação de coberturas, franquias e exclusões.
+* **Memória Persistente:** Gestão de estado da conversação utilizando Redis, permitindo auditorias contínuas e refinamento de contexto.
 
-### 4. Semantic Chunking
-Ao invés de cortar o PDF a cada 500 caracteres (o que quebra frases no meio), usamos um chunker semântico que identifica mudanças de tópico no texto para criar blocos de informação coesos.
+---
 
-### 5. Agentic Workflow (LangGraph)
-O sistema não é uma linha reta (Input -> Output). Ele possui "memória" e capacidade de **autocorreção**.
-* *Loop:* Se o agente não encontrar a informação na apólice, ele não alucina. Ele pode decidir fazer uma nova busca com termos diferentes ou pedir mais informações ao usuário.
+## Arquitetura e Engenharia
+
+O projeto utiliza uma arquitetura híbrida focada em eficiência de recursos (Free Tier Optimization):
+
+### 1. RAG Multimodal (Retrieval-Augmented Generation)
+
+Implementação de pipelines que ingerem tanto texto quanto imagem. As imagens são armazenadas no AWS S3 e indexadas no Qdrant, permitindo que o modelo recupere evidências visuais baseadas em consultas textuais.
+
+### 2. Infraestrutura Centralizada (Fat Container)
+
+Para otimização de custos, o núcleo da aplicação (Frontend e Backend) reside em uma instância AWS EC2, orquestrada via Docker.
+
+### 3. Gestão de Estado Distribuída
+
+Utilização do AWS ElastiCache (Redis) para manter o histórico de interações do usuário isolado do processamento principal, garantindo baixa latência na recuperação de contexto.
+
+### 4. Busca Vetorial Avançada
+
+Utilização de embeddings densos para captura de nuances semânticas nas cláusulas de seguros, superando limitações de buscas tradicionais por palavras-chave.
+
+---
+
+## Como Executar
+
+### Pré-requisitos
+
+* Docker e Docker Compose
+* Conta AWS ativa (Configuração de credenciais IAM)
+* Chaves de API (Groq, Qdrant)
+
+### Instalação
+
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/claims-ai.git
+
+# Configure as variáveis de ambiente
+cp .env.example .env
+
+# Inicie a infraestrutura
+docker-compose up -d
+```
